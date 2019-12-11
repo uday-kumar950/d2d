@@ -1,0 +1,15 @@
+# Read about fixtures at http://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  service_trip: one
+  vehicle: one
+  lat: 9.99
+  lng: 9.99
+  at: 2019-12-08 01:11:39
+
+two:
+  service_trip: two
+  vehicle: two
+  lat: 9.99
+  lng: 9.99
+  at: 2019-12-08 01:11:39

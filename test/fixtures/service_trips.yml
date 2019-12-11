@@ -1,0 +1,11 @@
+# Read about fixtures at http://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  vehicle: one
+  travel_date: 2019-12-08
+  running_status: false
+
+two:
+  vehicle: two
+  travel_date: 2019-12-08
+  running_status: false
