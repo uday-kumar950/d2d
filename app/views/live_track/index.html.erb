@@ -1,10 +1,17 @@
 <div class="panel-body">
 	<div class="row">
-		<%= label_tag :live_tracking%>:
-		<%= select_tag "vehicles", options_from_collection_for_select(@vehicles, "id", "uuid"),class: "form-control",onchange: "live_vehicle_tracking(this.value)"%>
-		<div id="fixed_map" class="col-md-8" style="padding-right:0">
+		<div class="col-md-12">
+			<div class="col-md-2 text-right">
+				<%= label_tag :select_vehicle_for_tracking%>:
+			</div>
+			<div class="col-md-4">
+				<%= select_tag "vehicles", options_from_collection_for_select(@vehicles, "id", "uuid"),class: "form-control",onchange: "live_vehicle_tracking(this.value)",prompt: "Select vehicle"%>
+			</div>
+		</div>
+		<br><br><br>
+		<div id="fixed_map" class="col-md-10 col-md-offset-1" style="padding-right:0">
 			<div id="map_container" class="text-center">
-				<%= render 'map_view'%>
+				<div id="map" class="sticky cls_leaflet" style='height: 550px;width: 100%;'></div>
 			</div>
 		</div>
 	</div>
@@ -21,7 +28,7 @@
 	}),
 	latlng = L.latLng(52.53, 13.403);
 
-	var map = L.map('map', {center: latlng, zoom: 13, layers: [tiles]});
+	var map = L.map('map', {center: latlng, zoom: 15, layers: [tiles]});
 
 	var markers = L.markerClusterGroup();
 	var vehicle_markers = L.markerClusterGroup();
@@ -36,105 +43,6 @@
 	map.addLayer(markers);
 
 
-	function live_vehicle_tracking(vehicle_id){
-		markers.clearLayers();
-		vehicle_markers.clearLayers();	
-		if (interval != null){clearInterval(interval)}	
-		$.ajax({
-          url: '/live_track/get_vehicle_feeds/'+vehicle_id+'',
-          dataType: 'JSON',
-          type: 'GET',
-          async: true,
-          success: function(data) {
-          	 $.each(data, function (i, origin_dest) {
-          	 	var origin = [origin_dest[0],origin_dest[1]]
-          	 	create_red_dot(origin)
-          	 	create_poly_lines(origin,prev_lat_long)
-          	 	prev_lat_long = origin
-          	 })
-          	 if (prev_lat_long != null){
-				 var busIcon = L.icon({
-					iconUrl: "<%=asset_path('bus.png') %>"
-				 })
-	          	 bus_marker = L.marker(prev_lat_long, {icon: busIcon}).addTo(map)
-	          	 add_vehicle_markers(bus_marker)
-          	 }
-            
-          },
-			error: function() {
-			 	console.log("error");
-			},
-			complete: function (data) {
-				getDataWithInterval(3000,vehicle_id)    
-			}
-        });
-	}
-
-	function create_red_dot(lat_long){
-		if (prev_lat_long != null && prev_lat_long[0] != lat_long[0] && prev_lat_long[1] != lat_long[1]) {
-			console.log("========"+prev_lat_long+"888888888"+lat_long+"")
-			var red_dot = L.icon({
-				iconUrl: "<%=asset_path('dot-red.png') %>"
-			})
-			var red_dot_marker = L.marker(lat_long, {icon: red_dot})//.bindPopup(""+details["timestamp"]+"<br>"+ details['speed'] +" km/h")
-			red_dot_marker.addTo(map);	
-			add_vehicle_markers(red_dot_marker)
-		}
-	}
-
-	function create_poly_lines(lat_long,prev_lat_long){
-		if (prev_lat_long != null && prev_lat_long != lat_long){
-			var polyline = L.polyline([lat_long,prev_lat_long]);
-			polyline.addTo(map);	
-			add_vehicle_markers(polyline)
-		}
-	}
-
-	function update_marker(vehicle_id){
-		var busIcon = L.icon({
-			iconUrl: "<%=asset_path('bus.png') %>"
-		}) 
-		$.ajax({
-          url: '/live_track/get_current_location/'+vehicle_id+'',
-          dataType: 'JSON',
-          type: 'GET',
-          async: true,
-          success: function(data) {  
-	          	 	var origin = [data[0],data[1]]
-          		if (data.length != 0 && prev_lat_long != null && prev_lat_long[0] != data[0] && prev_lat_long[1] != data[1])  {   	 
-	          	 	create_red_dot(origin)
-	          	 	create_poly_lines(origin,prev_lat_long)
-	          	 	if (bus_marker != null){map.removeLayer(bus_marker)}	          	 	
-					if(prev_lat_long != null){
-						bus_marker =  L.Marker.movingMarker([prev_lat_long,origin],[3000],{icon: busIcon}).addTo(map);
-						bus_marker.start()
-					}
-					else
-					{
-						bus_marker = L.marker(origin, {icon: busIcon}).addTo(map)  
-					}
-					add_vehicle_markers(bus_marker)
-	          	 	prev_lat_long = origin
-	          	} 
-          },
-			error: function() {
-			 	console.log("error");
-			},
-			complete: function (data) {
-      			//getDataWithInterval(3000,vehicle_id)    
-   			}
-        });
-	}
-
-	function getDataWithInterval(time_limit,vehicle_id){
-		interval = setInterval(function () {
-			update_marker(vehicle_id);
-		},3000);
-	}
-
-	function add_vehicle_markers(marker){
-		vehicle_markers.addLayer(marker)
-		map.addLayer(vehicle_markers);
-	}
+	
 
 </script>

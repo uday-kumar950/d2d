@@ -5,7 +5,6 @@ class VehiclesController < ApplicationController
   before_action :get_vehicle,only: [:delete,:locations]
 
   def new
-    binding.pry
   	vehicle = Vehicle.find_or_initialize_by(uuid: @raw_data[:id])
   	vehicle.regd_status = true
   	if vehicle.save
@@ -17,13 +16,15 @@ class VehiclesController < ApplicationController
   end
 
   def locations
-    if @vehicle.present?
+    if @vehicle.present? && @vehicle.regd_status
   	   BaseFeedJob.perform_async(params,@raw_data)
        data = {code: 204} 
+    elsif @vehicle.present? && !@vehicle.regd_status
+       data = {code: 500,msg: "Unresgisterd vehicle"} 
     else
        data = {code: 404,msg: "No record found"}
     end
-  	render json: {code: 204}
+  	render json: data
   end
 
   def delete
