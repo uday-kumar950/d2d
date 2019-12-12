@@ -17,11 +17,11 @@
 //= require leaflet/leaflet.js
 //= require leaflet/markercluster-src.js
 //= require leaflet/realworld.js
+//= require underscore
 //= require_tree .
 
 function live_vehicle_tracking(vehicle_id){
-		markers.clearLayers();
-		vehicle_markers.clearLayers();	
+			
 		if (interval != null){clearInterval(interval)}	
 		$.ajax({
           url: '/live_track/get_vehicle_feeds/'+vehicle_id+'',
@@ -29,10 +29,11 @@ function live_vehicle_tracking(vehicle_id){
           type: 'GET',
           async: true,
           success: function(data) {
+          	markers.clearLayers();
+			vehicle_markers.clearLayers();
           	 $.each(data, function (i, origin_dest) {
           	 	var origin = [origin_dest[0],origin_dest[1]]
-          	 	create_red_dot(origin)
-          	 	create_poly_lines(origin,prev_lat_long)
+          	 	create_red_dot(origin)          	 	
           	 	prev_lat_long = origin
           	 })
           	 if (prev_lat_long != null){
@@ -42,7 +43,8 @@ function live_vehicle_tracking(vehicle_id){
 				 })
 	          	 bus_marker = L.marker(prev_lat_long, {icon: busIcon}).addTo(map)
 	          	 add_vehicle_markers(bus_marker)
-	          	 map.setView(prev_lat_long, 15)
+	          	 map.setView(prev_lat_long, 13)
+	          	 map.fitBounds(vehicle_markers.getBounds());
           	 }
             
           },
@@ -60,16 +62,15 @@ function live_vehicle_tracking(vehicle_id){
 			var red_dot = L.icon({
 				iconUrl: "<%=asset_path('dot-red.png') %>"
 			})
-			var red_dot_marker = L.marker(lat_long, {icon: red_dot})//.bindPopup(""+details["timestamp"]+"<br>"+ details['speed'] +" km/h")
-			red_dot_marker.addTo(map);	
+			var red_dot_marker = L.marker(lat_long, {icon: red_dot}).addTo(map)//.bindPopup(""+details["timestamp"]+"<br>"+ details['speed'] +" km/h")
 			add_vehicle_markers(red_dot_marker)
+			create_poly_lines(lat_long,prev_lat_long)
 		}
 	}
 
 	function create_poly_lines(lat_long,prev_lat_long){
 		if (prev_lat_long != null && prev_lat_long != lat_long){
-			var polyline = L.polyline([lat_long,prev_lat_long]);
-			polyline.addTo(map);	
+			var polyline = L.polyline([lat_long,prev_lat_long]).addTo(map);
 			add_vehicle_markers(polyline)
 		}
 	}
@@ -84,11 +85,14 @@ function live_vehicle_tracking(vehicle_id){
           type: 'GET',
           async: true,
           success: function(data) {  
-	          	 	var origin = [data[0],data[1]]
-          		if (data.length != 0 && prev_lat_long != null && prev_lat_long[0] != data[0] && prev_lat_long[1] != data[1])  {   	 
+	          	var origin = [data[0],data[1]]
+          		if (data.length != 0 && prev_lat_long != null && (prev_lat_long[0] != data[0] || prev_lat_long[1] != data[1]))  {   	 
 	          	 	create_red_dot(origin)
 	          	 	create_poly_lines(origin,prev_lat_long)
-	          	 	if (bus_marker != null){map.removeLayer(bus_marker)}	          	 	
+	          	 	if (bus_marker != null){
+	          	 		vehicle_markers.removeLayer(bus_marker)
+	          	 		map.removeLayer(bus_marker)
+	          	 	}	          	 	
 					if(prev_lat_long != null){
 						bus_marker =  L.Marker.movingMarker([prev_lat_long,origin],[3000],{icon: busIcon}).addTo(map);
 						bus_marker.start()
@@ -99,7 +103,8 @@ function live_vehicle_tracking(vehicle_id){
 					}
 					add_vehicle_markers(bus_marker)
 	          	 	prev_lat_long = origin
-	          	 	map.setView(origin, 15)
+	          	 	map.setView(origin, 13)
+	          	 	map.fitBounds(vehicle_markers.getBounds());
 	          	} 
           },
 			error: function() {

@@ -1,7 +1,7 @@
 <div class="panel-body">
 	<div class="row">
-		<div class="col-md-12">
-			<div class="col-md-2 text-right">
+		<div class="col-md-10 col-md-offset-1">
+			<div class="col-md-3 text-right">
 				<%= label_tag :select_vehicle_for_tracking%>:
 			</div>
 			<div class="col-md-4">
@@ -37,12 +37,10 @@
 		var a = addressPoints[i];
 		var title = a[2];
 		var marker = L.marker(new L.LatLng(a[0], a[1]), { title: title });
-		marker.bindPopup(title);
+		marker.bindPopup(title).openPopup()
 		markers.addLayer(marker);
 	}
 	map.addLayer(markers);
-
-
-	
+	map.fitBounds(markers.getBounds());	
 
 </script>
